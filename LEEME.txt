@@ -1,0 +1,18 @@
+MoonDrip - mod de Fabric para Minecraft 1.21.1 (funciona tambien en 1.21)
+
+Etapa 1: Creeper Solar
+- Aparece de forma natural en el Overworld (mucho menos seguido que el creeper normal).
+- Los creepers originales siguen existiendo.
+- Tiene mas vida y explota con flash y particulas doradas.
+- Huevo generador en la pestana "Huevos generadores" del creativo, o con: /summon moondrip:solar_creeper
+
+Como compilar (en la nube, con GitHub Actions):
+1. Subir todos estos archivos y carpetas a un repositorio de GitHub.
+2. Si la carpeta oculta ".github" no se subio, crear el archivo a mano con el nombre
+   .github/workflows/build.yml y pegar el contenido que esta en este proyecto.
+3. En la pestana "Actions" del repositorio, esperar que termine "build".
+4. Entrar a esa ejecucion y bajar el artefacto "moondrip-jar".
+5. Descomprimirlo: adentro esta moondrip-1.0.0.jar. Ese es el mod.
+
+Para probarlo hace falta Fabric Loader + Fabric API en Minecraft 1.21.x.
+Si la compilacion falla, copiar el error de Actions y pasarselo a Claude.
