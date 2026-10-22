@@ -14,9 +14,12 @@ import net.minecraft.world.World;
 public class SolarCreeperEntity extends CreeperEntity {
 
 	// Cambia estos valores a tu gusto
-	private static final double EFFECT_RADIUS = 6.0;   // bloques alrededor de la explosion
+	private static final double EFFECT_RADIUS = 7.0;   // bloques alrededor del creeper
 	private static final float FIRE_SECONDS = 5.0F;    // segundos en llamas
 	private static final int BLIND_TICKS = 100;        // 20 ticks = 1 segundo (100 = 5 s)
+
+	// Para aplicar los efectos una sola vez por explosion
+	private boolean effectsApplied = false;
 
 	public SolarCreeperEntity(EntityType<? extends CreeperEntity> entityType, World world) {
 		super(entityType, world);
@@ -29,26 +32,39 @@ public class SolarCreeperEntity extends CreeperEntity {
 
 	@Override
 	public void tick() {
-		super.tick();
-		// Si ya exploto en este tick (se elimino con la mecha completa), hacemos el flash solar
-		if (!this.getWorld().isClient && this.isRemoved() && this.getClientFuseTime(1.0F) >= 1.0F) {
-			if (this.getWorld() instanceof ServerWorld serverWorld) {
-				double x = this.getX();
-				double y = this.getBodyY(0.5);
-				double z = this.getZ();
-				serverWorld.spawnParticles(ParticleTypes.FLASH, x, y, z, 3, 0.0, 0.0, 0.0, 0.0);
-				serverWorld.spawnParticles(ParticleTypes.END_ROD, x, y, z, 60, 0.7, 0.7, 0.7, 0.2);
-
-				// Efectos para los jugadores que sobrevivieron a la explosion
-				double radiusSq = EFFECT_RADIUS * EFFECT_RADIUS;
-				for (PlayerEntity player : serverWorld.getPlayers()) {
-					if (!player.isAlive() || player.isSpectator()) continue;
-					if (player.squaredDistanceTo(x, y, z) > radiusSq) continue;
-
-					player.setOnFireFor(FIRE_SECONDS);
-					player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, BLIND_TICKS, 0));
-				}
+		// Justo antes de explotar (la mecha esta casi completa), aplicamos los efectos.
+		// Es 1-2 ticks antes de la explosion; los jugadores que mueran por el daño pierden los efectos solos.
+		if (!this.getWorld().isClient && this.isAlive()) {
+			float fuse = this.getClientFuseTime(1.0F);
+			if (!this.effectsApplied && fuse >= 1.0F) {
+				this.effectsApplied = true;
+				this.applySolarEffects();
+			} else if (this.effectsApplied && fuse < 0.5F) {
+				// Si la mecha se cancelo, permitimos que vuelva a pasar
+				this.effectsApplied = false;
 			}
+		}
+
+		super.tick();
+	}
+
+	private void applySolarEffects() {
+		if (!(this.getWorld() instanceof ServerWorld serverWorld)) return;
+
+		// Flash solar y particulas doradas
+		double x = this.getX();
+		double y = this.getBodyY(0.5);
+		double z = this.getZ();
+		serverWorld.spawnParticles(ParticleTypes.FLASH, x, y, z, 3, 0.0, 0.0, 0.0, 0.0);
+		serverWorld.spawnParticles(ParticleTypes.END_ROD, x, y, z, 60, 0.7, 0.7, 0.7, 0.2);
+
+		double radiusSq = EFFECT_RADIUS * EFFECT_RADIUS;
+		for (PlayerEntity player : serverWorld.getPlayers()) {
+			if (!player.isAlive() || player.isSpectator()) continue;
+			if (player.squaredDistanceTo(this) > radiusSq) continue;
+
+			player.setOnFireFor(FIRE_SECONDS);
+			player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, BLIND_TICKS, 0));
 		}
 	}
 }
