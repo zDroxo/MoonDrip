@@ -9,6 +9,7 @@ public class MoonDrip implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		ModSounds.register();
 		ModEntities.register();
 		ModItems.register();
 	}

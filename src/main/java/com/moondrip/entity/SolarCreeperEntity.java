@@ -1,5 +1,6 @@
 package com.moondrip.entity;
 
+import com.moondrip.ModSounds;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -8,7 +9,9 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.world.World;
 
 public class SolarCreeperEntity extends CreeperEntity {
@@ -17,6 +20,8 @@ public class SolarCreeperEntity extends CreeperEntity {
 	private static final double EFFECT_RADIUS = 7.0;   // bloques alrededor del creeper
 	private static final float FIRE_SECONDS = 5.0F;    // segundos en llamas
 	private static final int BLIND_TICKS = 100;        // 20 ticks = 1 segundo (100 = 5 s)
+	private static final float RING_VOLUME = 1.0F;     // volumen del pitido (0.0 a 1.0)
+	private static final float RING_PITCH = 1.0F;      // tono del pitido (mas alto = mas agudo)
 
 	// Para aplicar los efectos una sola vez por explosion
 	private boolean effectsApplied = false;
@@ -65,6 +70,11 @@ public class SolarCreeperEntity extends CreeperEntity {
 
 			player.setOnFireFor(FIRE_SECONDS);
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, BLIND_TICKS, 0));
+
+			// Pitido solo para los jugadores que quedaron dentro del radio
+			if (player instanceof ServerPlayerEntity serverPlayer) {
+				serverPlayer.playSoundToPlayer(ModSounds.SOLAR_FLASH_RING, SoundCategory.HOSTILE, RING_VOLUME, RING_PITCH);
+			}
 		}
 	}
 }
