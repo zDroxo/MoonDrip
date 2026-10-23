@@ -16,7 +16,7 @@ import net.minecraft.util.Identifier;
 public class SolarAuraFeatureRenderer extends FeatureRenderer<SolarCreeperEntity, SolarCreeperModel> {
 
 	// Que tan grande es el aura (en pixeles de modelo). Mas alto = aura mas gorda.
-	public static final float AURA_DILATION = 1.5F;
+	public static final float AURA_DILATION = 0.4F;
 	// Velocidad con la que se mueve el aura
 	private static final float SCROLL_SPEED = 0.012F;
 
