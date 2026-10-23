@@ -51,6 +51,11 @@ public class SolarCreeperEntity extends CreeperEntity {
 		}
 
 		super.tick();
+
+		// Si despues del tick el creeper ya no existe, es porque exploto: ahora si suena el pitido
+		if (!this.getWorld().isClient && this.effectsApplied && this.isRemoved()) {
+			this.playRing();
+		}
 	}
 
 	private void applySolarEffects() {
@@ -70,8 +75,18 @@ public class SolarCreeperEntity extends CreeperEntity {
 
 			player.setOnFireFor(FIRE_SECONDS);
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, BLIND_TICKS, 0));
+		}
+	}
 
-			// Pitido solo para los jugadores que quedaron dentro del radio
+	// Pitido tipo "auriculares": suena solo para los jugadores dentro del radio, despues de la explosion
+	private void playRing() {
+		if (!(this.getWorld() instanceof ServerWorld serverWorld)) return;
+
+		double radiusSq = EFFECT_RADIUS * EFFECT_RADIUS;
+		for (PlayerEntity player : serverWorld.getPlayers()) {
+			if (!player.isAlive() || player.isSpectator()) continue;
+			if (player.squaredDistanceTo(this) > radiusSq) continue;
+
 			if (player instanceof ServerPlayerEntity serverPlayer) {
 				serverPlayer.playSoundToPlayer(ModSounds.SOLAR_FLASH_RING, SoundCategory.HOSTILE, RING_VOLUME, RING_PITCH);
 			}
