@@ -11,6 +11,7 @@
 		"main": ["com.moondrip.MoonDrip"],
 		"client": ["com.moondrip.client.MoonDripClient"]
 	},
+	"mixins": ["moondrip.mixins.json"],
 	"depends": {
 		"fabricloader": ">=0.16.0",
 		"minecraft": "~1.21",
