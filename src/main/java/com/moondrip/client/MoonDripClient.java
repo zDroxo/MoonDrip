@@ -9,6 +9,7 @@ public class MoonDripClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		EntityModelLayerRegistry.registerModelLayer(ModModelLayers.SOLAR_CREEPER, SolarCreeperModel::getTexturedModelData);
+		EntityModelLayerRegistry.registerModelLayer(ModModelLayers.SOLAR_CREEPER_AURA, () -> SolarCreeperModel.getTexturedModelData(SolarAuraFeatureRenderer.AURA_DILATION));
 		EntityRendererRegistry.register(ModEntities.SOLAR_CREEPER, SolarCreeperRenderer::new);
 	}
 }

@@ -31,15 +31,22 @@ public class SolarCreeperModel extends SinglePartEntityModel<SolarCreeperEntity>
 		this.leg3 = root.getChild("leg3");
 	}
 
+	// Modelo normal (sin inflar)
 	public static TexturedModelData getTexturedModelData() {
+		return getTexturedModelData(0.0F);
+	}
+
+	// Con "dilation" mayor a 0 el modelo queda mas grande: se usa para el aura que rodea al creeper
+	public static TexturedModelData getTexturedModelData(float dilation) {
+		Dilation d = new Dilation(dilation);
 		ModelData modelData = new ModelData();
 		ModelPartData modelPartData = modelData.getRoot();
-		modelPartData.addChild("head", ModelPartBuilder.create().uv(0, 0).cuboid(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, new Dilation(0.0F)), ModelTransform.pivot(0.0F, 6.0F, 0.0F));
-		modelPartData.addChild("body", ModelPartBuilder.create().uv(16, 16).cuboid(-4.0F, 0.0F, -2.0F, 8.0F, 12.0F, 4.0F, new Dilation(0.0F)), ModelTransform.pivot(0.0F, 6.0F, 0.0F));
-		modelPartData.addChild("leg0", ModelPartBuilder.create().uv(0, 16).cuboid(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, new Dilation(0.0F)), ModelTransform.pivot(2.0F, 18.0F, 4.0F));
-		modelPartData.addChild("leg1", ModelPartBuilder.create().uv(0, 16).cuboid(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, new Dilation(0.0F)), ModelTransform.pivot(-2.0F, 18.0F, 4.0F));
-		modelPartData.addChild("leg2", ModelPartBuilder.create().uv(0, 16).cuboid(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, new Dilation(0.0F)), ModelTransform.pivot(2.0F, 18.0F, -4.0F));
-		modelPartData.addChild("leg3", ModelPartBuilder.create().uv(0, 16).cuboid(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, new Dilation(0.0F)), ModelTransform.pivot(-2.0F, 18.0F, -4.0F));
+		modelPartData.addChild("head", ModelPartBuilder.create().uv(0, 0).cuboid(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, d), ModelTransform.pivot(0.0F, 6.0F, 0.0F));
+		modelPartData.addChild("body", ModelPartBuilder.create().uv(16, 16).cuboid(-4.0F, 0.0F, -2.0F, 8.0F, 12.0F, 4.0F, d), ModelTransform.pivot(0.0F, 6.0F, 0.0F));
+		modelPartData.addChild("leg0", ModelPartBuilder.create().uv(0, 16).cuboid(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, d), ModelTransform.pivot(2.0F, 18.0F, 4.0F));
+		modelPartData.addChild("leg1", ModelPartBuilder.create().uv(0, 16).cuboid(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, d), ModelTransform.pivot(-2.0F, 18.0F, 4.0F));
+		modelPartData.addChild("leg2", ModelPartBuilder.create().uv(0, 16).cuboid(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, d), ModelTransform.pivot(2.0F, 18.0F, -4.0F));
+		modelPartData.addChild("leg3", ModelPartBuilder.create().uv(0, 16).cuboid(-2.0F, 0.0F, -2.0F, 4.0F, 6.0F, 4.0F, d), ModelTransform.pivot(-2.0F, 18.0F, -4.0F));
 		return TexturedModelData.of(modelData, 64, 32);
 	}
 
