@@ -1,0 +1,6 @@
+{
+	"parent": "minecraft:item/generated",
+	"textures": {
+		"layer0": "moondrip:item/solar_creeper_totem"
+	}
+}
