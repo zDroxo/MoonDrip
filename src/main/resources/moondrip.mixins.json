@@ -6,7 +6,8 @@
 		"LivingEntityMixin"
 	],
 	"client": [
-		"client.ClientPlayNetworkHandlerMixin"
+		"client.ClientPlayNetworkHandlerMixin",
+		"client.KeyboardInputMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

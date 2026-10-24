@@ -1,6 +1,7 @@
 package com.moondrip.entity;
 
 import com.moondrip.MoonDrip;
+import com.moondrip.effect.ModEffects;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
@@ -42,6 +43,8 @@ public class ModEntities {
 	);
 
 	public static void register() {
+		ModEffects.register();
+
 		FabricDefaultAttributeRegistry.register(SOLAR_CREEPER, SolarCreeperEntity.createSolarCreeperAttributes());
 		FabricDefaultAttributeRegistry.register(PEZ_LINTERNA, PezLinternaEntity.createPezLinternaAttributes());
 
