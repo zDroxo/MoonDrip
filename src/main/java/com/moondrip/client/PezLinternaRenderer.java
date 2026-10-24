@@ -11,6 +11,8 @@ public class PezLinternaRenderer extends MobEntityRenderer<PezLinternaEntity, Pe
 
 	public PezLinternaRenderer(EntityRendererFactory.Context context) {
 		super(context, new PezLinternaModel(context.getPart(ModModelLayers.PEZ_LINTERNA)), 0.4F);
+		// La linterna brilla de noche
+		this.addFeature(new PezLinternaGlowFeatureRenderer(this));
 	}
 
 	@Override
