@@ -2,6 +2,7 @@ package com.moondrip.entity;
 
 import java.util.EnumSet;
 
+import com.moondrip.ModSounds;
 import com.moondrip.effect.ModEffects;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -16,6 +17,7 @@ import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.SwimNavigation;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.WaterCreatureEntity;
@@ -23,7 +25,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -63,6 +65,24 @@ public class PezLinternaEntity extends WaterCreatureEntity {
 				.add(EntityAttributes.GENERIC_FOLLOW_RANGE, 24.0)
 				// Mordida: 6.0 de dano = 3 corazones
 				.add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 6.0);
+	}
+
+	// --- Sonidos propios (ver ModSounds) ---
+
+	// Sonido ambiente: elige al azar una de las 2 variantes
+	@Override
+	protected SoundEvent getAmbientSound() {
+		return this.getRandom().nextBoolean() ? ModSounds.PEZ_LINTERNA_AMBIENT1 : ModSounds.PEZ_LINTERNA_AMBIENT2;
+	}
+
+	@Override
+	protected SoundEvent getHurtSound(DamageSource source) {
+		return ModSounds.PEZ_LINTERNA_HURT;
+	}
+
+	@Override
+	protected SoundEvent getDeathSound() {
+		return ModSounds.PEZ_LINTERNA_DEATH;
 	}
 
 	@Override
@@ -129,12 +149,12 @@ public class PezLinternaEntity extends WaterCreatureEntity {
 				this.lanternCooldown = HYPNOSIS_TICKS + LANTERN_PAUSE_TICKS;
 				world.spawnParticles(ParticleTypes.WITCH, pos.x, pos.y + 0.3, pos.z, 30, 0.4, 0.4, 0.4, 0.1);
 				world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y + 0.3, pos.z, 12, 0.3, 0.3, 0.3, 0.05);
-				this.playSound(SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE, 1.0F, 1.2F);
+				this.playSound(ModSounds.PEZ_LINTERNA_LANTERN_FLASH, 1.0F, 1.0F);
 			}
 		} else if (this.lanternCooldown == 0 && targetOk && !target.hasStatusEffect(ModEffects.HIPNOSIS)) {
 			// Empieza a cargarse
 			this.lanternCharge = LANTERN_CHARGE_TICKS;
-			this.playSound(SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, 1.0F, 0.6F);
+			this.playSound(ModSounds.PEZ_LINTERNA_LANTERN_CHARGE, 1.0F, 1.0F);
 		}
 	}
 
@@ -147,6 +167,7 @@ public class PezLinternaEntity extends WaterCreatureEntity {
 		boolean hit = super.tryAttack(target);
 		if (hit) {
 			this.biteCooldown = BITE_COOLDOWN_TICKS;
+			this.playSound(ModSounds.PEZ_LINTERNA_BITE, 1.0F, 1.0F);
 		}
 		return hit;
 	}

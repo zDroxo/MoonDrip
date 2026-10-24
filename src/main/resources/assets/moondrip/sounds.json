@@ -3,5 +3,40 @@
     "sounds": [
       "moondrip:solar_flash_ring"
     ]
+  },
+  "pez_linterna_ambient1": {
+    "sounds": [
+      "moondrip:pez_linterna_ambient1"
+    ]
+  },
+  "pez_linterna_ambient2": {
+    "sounds": [
+      "moondrip:pez_linterna_ambient2"
+    ]
+  },
+  "pez_linterna_hurt": {
+    "sounds": [
+      "moondrip:pez_linterna_hurt"
+    ]
+  },
+  "pez_linterna_death": {
+    "sounds": [
+      "moondrip:pez_linterna_death"
+    ]
+  },
+  "pez_linterna_bite": {
+    "sounds": [
+      "moondrip:pez_linterna_bite"
+    ]
+  },
+  "pez_linterna_lantern_charge": {
+    "sounds": [
+      "moondrip:pez_linterna_lantern_charge"
+    ]
+  },
+  "pez_linterna_lantern_flash": {
+    "sounds": [
+      "moondrip:pez_linterna_lantern_flash"
+    ]
   }
 }
