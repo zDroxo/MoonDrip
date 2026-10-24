@@ -1,23 +1,36 @@
 package com.moondrip.entity;
 
+import java.util.EnumSet;
+
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.ai.control.MoveControl;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
+import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.SwimAroundGoal;
+import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.SwimNavigation;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.WaterCreatureEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 
-// Pez Linterna: pez abisal. Por ahora solo existe y nada (las habilidades van al final).
+// Pez Linterna: pez abisal. Vive en el fondo del agua, persigue a los jugadores que estan en el agua y los muerde.
+// (La linterna que inmoviliza va en la pieza 3.)
 public class PezLinternaEntity extends WaterCreatureEntity {
+	// Ticks que faltan para poder volver a morder (20 ticks = 1 segundo)
+	private static final int BITE_COOLDOWN_TICKS = 40;
+	private int biteCooldown = 0;
 
 	public PezLinternaEntity(EntityType<? extends PezLinternaEntity> entityType, World world) {
 		super(entityType, world);
@@ -26,13 +39,49 @@ public class PezLinternaEntity extends WaterCreatureEntity {
 
 	public static DefaultAttributeContainer.Builder createPezLinternaAttributes() {
 		return MobEntity.createMobAttributes()
-				.add(EntityAttributes.GENERIC_MAX_HEALTH, 20.0);
+				.add(EntityAttributes.GENERIC_MAX_HEALTH, 20.0)
+				.add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 1.0)
+				.add(EntityAttributes.GENERIC_FOLLOW_RANGE, 24.0)
+				// Mordida: 6.0 de dano = 3 corazones
+				.add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 6.0);
 	}
 
 	@Override
 	protected void initGoals() {
-		this.goalSelector.add(0, new SwimAroundGoal(this, 1.0, 40));
-		this.goalSelector.add(1, new LookAroundGoal(this));
+		// Si tiene un objetivo, lo persigue y lo muerde
+		this.goalSelector.add(0, new MeleeAttackGoal(this, 1.2, true));
+		// Si no, nada hacia lugares del fondo (en vez de lugares al azar, que lo hacian subir)
+		this.goalSelector.add(1, new SwimDeepGoal(this, 1.0));
+		this.goalSelector.add(2, new LookAroundGoal(this));
+		// Elige como objetivo a jugadores (solo si estan en el agua, ver canTarget)
+		this.targetSelector.add(1, new ActiveTargetGoal<PlayerEntity>(this, PlayerEntity.class, true));
+	}
+
+	// Solo ataca a jugadores que estan en el agua (si salen a tierra, los suelta)
+	@Override
+	public boolean canTarget(LivingEntity target) {
+		return super.canTarget(target) && target.isTouchingWater();
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (this.biteCooldown > 0) {
+			this.biteCooldown--;
+		}
+	}
+
+	// Mordida con pausa entre mordiscos (si no, morderia cada segundo)
+	@Override
+	public boolean tryAttack(Entity target) {
+		if (this.biteCooldown > 0) {
+			return false;
+		}
+		boolean hit = super.tryAttack(target);
+		if (hit) {
+			this.biteCooldown = BITE_COOLDOWN_TICKS;
+		}
+		return hit;
 	}
 
 	@Override
@@ -40,18 +89,75 @@ public class PezLinternaEntity extends WaterCreatureEntity {
 		return new SwimNavigation(this, world);
 	}
 
-	// Movimiento bajo el agua (igual que los peces normales)
+	// Movimiento bajo el agua
 	@Override
 	public void travel(Vec3d movementInput) {
 		if (this.isLogicalSideForUpdatingMovement() && this.isTouchingWater()) {
 			this.updateVelocity(0.01F, movementInput);
 			this.move(MovementType.SELF, this.getVelocity());
 			this.setVelocity(this.getVelocity().multiply(0.9));
+			// Siempre tiende a hundirse suavemente (pez abisal). Sin esto un pez comun queda flotando.
 			if (this.getTarget() == null) {
 				this.setVelocity(this.getVelocity().add(0.0, -0.005, 0.0));
 			}
 		} else {
 			super.travel(movementInput);
+		}
+	}
+
+	// Elige un punto al azar cerca y lo baja hasta el fondo del agua
+	static class SwimDeepGoal extends Goal {
+		private final PezLinternaEntity fish;
+		private final double speed;
+		private Vec3d target;
+
+		SwimDeepGoal(PezLinternaEntity fish, double speed) {
+			this.fish = fish;
+			this.speed = speed;
+			this.setControls(EnumSet.of(Goal.Control.MOVE));
+		}
+
+		@Override
+		public boolean canStart() {
+			if (!this.fish.isTouchingWater() || !this.fish.getNavigation().isIdle()) {
+				return false;
+			}
+			if (this.fish.getRandom().nextInt(20) != 0) {
+				return false;
+			}
+			this.target = this.findDeepSpot();
+			return this.target != null;
+		}
+
+		private Vec3d findDeepSpot() {
+			World world = this.fish.getWorld();
+			Random random = this.fish.getRandom();
+			int x = this.fish.getBlockX() + random.nextInt(17) - 8;
+			int z = this.fish.getBlockZ() + random.nextInt(17) - 8;
+			BlockPos.Mutable pos = new BlockPos.Mutable(x, this.fish.getBlockY(), z);
+			if (!world.getFluidState(pos).isIn(FluidTags.WATER)) {
+				return null;
+			}
+			// Baja mientras siga habiendo agua debajo (maximo 32 bloques)
+			for (int i = 0; i < 32 && world.getFluidState(pos.down()).isIn(FluidTags.WATER); i++) {
+				pos.move(0, -1, 0);
+			}
+			return new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+		}
+
+		@Override
+		public void start() {
+			this.fish.getNavigation().startMovingTo(this.target.x, this.target.y, this.target.z, this.speed);
+		}
+
+		@Override
+		public boolean shouldContinue() {
+			return !this.fish.getNavigation().isIdle();
+		}
+
+		@Override
+		public void stop() {
+			this.fish.getNavigation().stop();
 		}
 	}
 
@@ -65,10 +171,7 @@ public class PezLinternaEntity extends WaterCreatureEntity {
 
 		@Override
 		public void tick() {
-			if (this.fish.isSubmergedIn(FluidTags.WATER)) {
-				this.fish.setVelocity(this.fish.getVelocity().add(0.0, 0.005, 0.0));
-			}
-
+			// (Quite la fuerza hacia arriba que tienen los peces comunes: este pez no flota)
 			if (this.state == MoveControl.State.MOVE_TO && !this.fish.getNavigation().isIdle()) {
 				float speed = (float) (this.speed * this.fish.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED));
 				this.fish.setMovementSpeed(MathHelper.lerp(0.125F, this.fish.getMovementSpeed(), speed));
