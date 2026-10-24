@@ -11,5 +11,8 @@ public class MoonDripClient implements ClientModInitializer {
 		EntityModelLayerRegistry.registerModelLayer(ModModelLayers.SOLAR_CREEPER, SolarCreeperModel::getTexturedModelData);
 		EntityModelLayerRegistry.registerModelLayer(ModModelLayers.SOLAR_CREEPER_AURA, () -> SolarCreeperModel.getTexturedModelData(SolarAuraFeatureRenderer.AURA_DILATION));
 		EntityRendererRegistry.register(ModEntities.SOLAR_CREEPER, SolarCreeperRenderer::new);
+
+		EntityModelLayerRegistry.registerModelLayer(ModModelLayers.PEZ_LINTERNA, PezLinternaModel::getTexturedModelData);
+		EntityRendererRegistry.register(ModEntities.PEZ_LINTERNA, PezLinternaRenderer::new);
 	}
 }
