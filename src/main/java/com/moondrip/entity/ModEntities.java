@@ -29,8 +29,21 @@ public class ModEntities {
 					.build()
 	);
 
+	// Pez Linterna: criatura acuatica. El spawn natural (mar profundo y lagos grandes) va en la etapa 2.
+	public static final EntityType<PezLinternaEntity> PEZ_LINTERNA = Registry.register(
+			Registries.ENTITY_TYPE,
+			Identifier.of(MoonDrip.MOD_ID, "pez_linterna"),
+			FabricEntityTypeBuilder.<PezLinternaEntity>createMob()
+					.spawnGroup(SpawnGroup.WATER_CREATURE)
+					.entityFactory(PezLinternaEntity::new)
+					.dimensions(EntityDimensions.fixed(0.8f, 0.8f))
+					.trackRangeBlocks(8)
+					.build()
+	);
+
 	public static void register() {
 		FabricDefaultAttributeRegistry.register(SOLAR_CREEPER, SolarCreeperEntity.createSolarCreeperAttributes());
+		FabricDefaultAttributeRegistry.register(PEZ_LINTERNA, PezLinternaEntity.createPezLinternaAttributes());
 
 		// Aparece de forma natural en el Overworld, mucho menos seguido que el creeper normal
 		// (el creeper normal tiene peso 100; este tiene 8). Los originales siguen existiendo.
