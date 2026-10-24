@@ -17,6 +17,12 @@ public class ModItems {
 			new SpawnEggItem(ModEntities.SOLAR_CREEPER, 0xF5AF23, 0x7A1010, new Item.Settings())
 	);
 
+	public static final Item PEZ_LINTERNA_SPAWN_EGG = Registry.register(
+			Registries.ITEM,
+			Identifier.of(MoonDrip.MOD_ID, "pez_linterna_spawn_egg"),
+			new SpawnEggItem(ModEntities.PEZ_LINTERNA, 0x4A6B54, 0x5C1C7D, new Item.Settings())
+	);
+
 	public static final Item SOLAR_CREEPER_TOTEM = Registry.register(
 			Registries.ITEM,
 			Identifier.of(MoonDrip.MOD_ID, "solar_creeper_totem"),
@@ -24,7 +30,10 @@ public class ModItems {
 	);
 
 	public static void register() {
-		ItemGroupEvents.modifyEntriesEvent(ItemGroups.SPAWN_EGGS).register(entries -> entries.add(SOLAR_CREEPER_SPAWN_EGG));
+		ItemGroupEvents.modifyEntriesEvent(ItemGroups.SPAWN_EGGS).register(entries -> {
+			entries.add(SOLAR_CREEPER_SPAWN_EGG);
+			entries.add(PEZ_LINTERNA_SPAWN_EGG);
+		});
 		ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> entries.add(SOLAR_CREEPER_TOTEM));
 	}
 }

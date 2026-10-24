@@ -8,6 +8,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.control.MoveControl;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.Goal;
@@ -30,6 +31,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
+import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
 
 // Pez Linterna: pez abisal. Vive en el fondo del agua, persigue a los jugadores que estan en el agua y los muerde.
@@ -65,6 +67,31 @@ public class PezLinternaEntity extends WaterCreatureEntity {
 				.add(EntityAttributes.GENERIC_FOLLOW_RANGE, 24.0)
 				// Mordida: 6.0 de dano = 3 corazones
 				.add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 6.0);
+	}
+
+	// --- Aparicion natural ---
+	// Cuantos bloques de agua tiene que haber ARRIBA del punto donde aparece (agua profunda).
+	// Mas alto = solo en mares y lagos mas hondos.
+	private static final int MIN_WATER_DEPTH = 8;
+	// Rareza: solo 1 de cada N intentos de aparicion prospera. Mas alto = mas raro.
+	private static final int SPAWN_RARITY = 6;
+
+	// Regla de aparicion: agua profunda en cualquier parte (mar, lagos, lagos de cuevas) y con algo de suerte
+	public static boolean canSpawnDeep(EntityType<PezLinternaEntity> type, ServerWorldAccess world, SpawnReason reason, BlockPos pos, Random random) {
+		if (!world.getFluidState(pos).isIn(FluidTags.WATER)) {
+			return false;
+		}
+		if (random.nextInt(SPAWN_RARITY) != 0) {
+			return false;
+		}
+		// Cuenta los bloques de agua hacia arriba
+		BlockPos.Mutable check = pos.mutableCopy();
+		int depth = 0;
+		while (depth < MIN_WATER_DEPTH && world.getFluidState(check).isIn(FluidTags.WATER)) {
+			depth++;
+			check.move(0, 1, 0);
+		}
+		return depth >= MIN_WATER_DEPTH;
 	}
 
 	// --- Sonidos propios (ver ModSounds) ---

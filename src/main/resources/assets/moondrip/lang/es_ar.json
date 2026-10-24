@@ -1,5 +1,8 @@
 {
 	"entity.moondrip.solar_creeper": "Creeper Solar",
 	"item.moondrip.solar_creeper_spawn_egg": "Huevo generador de Creeper Solar",
-	"item.moondrip.solar_creeper_totem": "Tótem de Creeper Solar"
+	"item.moondrip.solar_creeper_totem": "Tótem de Creeper Solar",
+	"entity.moondrip.pez_linterna": "Pez Linterna",
+	"item.moondrip.pez_linterna_spawn_egg": "Huevo generador de Pez Linterna",
+	"effect.moondrip.hipnosis": "Hipnosis Abisal"
 }
