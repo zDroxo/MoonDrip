@@ -2,6 +2,7 @@ package com.moondrip.entity;
 
 import java.util.EnumSet;
 
+import com.moondrip.effect.ModEffects;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -15,10 +16,14 @@ import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.SwimNavigation;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.WaterCreatureEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -26,11 +31,25 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 
 // Pez Linterna: pez abisal. Vive en el fondo del agua, persigue a los jugadores que estan en el agua y los muerde.
-// (La linterna que inmoviliza va en la pieza 3.)
+// Su linterna se carga y le aplica Hipnosis (inmoviliza, dana y saca aire) al jugador.
 public class PezLinternaEntity extends WaterCreatureEntity {
 	// Ticks que faltan para poder volver a morder (20 ticks = 1 segundo)
 	private static final int BITE_COOLDOWN_TICKS = 40;
 	private int biteCooldown = 0;
+
+	// --- Linterna (todos los tiempos en ticks: 20 ticks = 1 segundo) ---
+	// A que distancia (en bloques) puede usar la linterna
+	private static final double LANTERN_RANGE = 10.0;
+	// Cuanto tarda en cargarse antes de brillar
+	private static final int LANTERN_CHARGE_TICKS = 40;
+	// Duracion de la Hipnosis: 6 segundos
+	private static final int HYPNOSIS_TICKS = 120;
+	// Pausa de 15 segundos DESPUES de que termina la Hipnosis
+	private static final int LANTERN_PAUSE_TICKS = 300;
+	// Ticks que faltan para poder volver a usarla
+	private int lanternCooldown = 0;
+	// Ticks que faltan para que termine de cargarse (0 = no se esta cargando)
+	private int lanternCharge = 0;
 
 	public PezLinternaEntity(EntityType<? extends PezLinternaEntity> entityType, World world) {
 		super(entityType, world);
@@ -68,6 +87,54 @@ public class PezLinternaEntity extends WaterCreatureEntity {
 		super.tick();
 		if (this.biteCooldown > 0) {
 			this.biteCooldown--;
+		}
+		if (this.getWorld() instanceof ServerWorld serverWorld) {
+			this.tickLantern(serverWorld);
+		}
+	}
+
+	// Posicion de la linterna en el mundo (punta de la antena, un poco hacia adelante)
+	private Vec3d getLanternPos() {
+		float yaw = this.bodyYaw * 0.017453292F;
+		return new Vec3d(
+				this.getX() - MathHelper.sin(yaw) * 0.25,
+				this.getY() + 1.15,
+				this.getZ() + MathHelper.cos(yaw) * 0.25
+		);
+	}
+
+	private void tickLantern(ServerWorld world) {
+		if (this.lanternCooldown > 0) {
+			this.lanternCooldown--;
+		}
+		LivingEntity target = this.getTarget();
+		boolean targetOk = target != null
+				&& target.isAlive()
+				&& target.isTouchingWater()
+				&& this.squaredDistanceTo(target) <= LANTERN_RANGE * LANTERN_RANGE
+				&& this.getVisibilityCache().canSee(target);
+
+		if (this.lanternCharge > 0) {
+			// Cargando: si el objetivo se aleja o se escapa, se cancela (sin pausa)
+			if (!targetOk) {
+				this.lanternCharge = 0;
+				return;
+			}
+			this.lanternCharge--;
+			Vec3d pos = this.getLanternPos();
+			world.spawnParticles(ParticleTypes.WITCH, pos.x, pos.y + 0.3, pos.z, 2, 0.2, 0.2, 0.2, 0.0);
+			if (this.lanternCharge == 0) {
+				// Brilla: aplica la Hipnosis y arranca la pausa
+				target.addStatusEffect(new StatusEffectInstance(ModEffects.HIPNOSIS, HYPNOSIS_TICKS, 0, false, true, true), this);
+				this.lanternCooldown = HYPNOSIS_TICKS + LANTERN_PAUSE_TICKS;
+				world.spawnParticles(ParticleTypes.WITCH, pos.x, pos.y + 0.3, pos.z, 30, 0.4, 0.4, 0.4, 0.1);
+				world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y + 0.3, pos.z, 12, 0.3, 0.3, 0.3, 0.05);
+				this.playSound(SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE, 1.0F, 1.2F);
+			}
+		} else if (this.lanternCooldown == 0 && targetOk && !target.hasStatusEffect(ModEffects.HIPNOSIS)) {
+			// Empieza a cargarse
+			this.lanternCharge = LANTERN_CHARGE_TICKS;
+			this.playSound(SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, 1.0F, 0.6F);
 		}
 	}
 
